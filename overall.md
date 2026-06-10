@@ -109,16 +109,33 @@ Backend dang dung 2 kieu luong:
 
 ### 1.4 Auth & bao mat
 
-- `GET /health`, `/swagger`, `/explorer/*`, `/api/auth/*`, `/hasura/*`, `/api/hasura/*` la public hoac secret-based
+He thong co 3 luong auth rieng biet:
+
+1. `Frontend -> Hasura`
+   - Frontend gui `Authorization: Bearer <JWT>` len Hasura.
+   - Hasura verify JWT va tu map claims sang `x-hasura-*` session variables.
+
+2. `Hasura -> Golang Action/Event`
+   - Hasura khong gui JWT goc sang backend.
+   - Hasura forward `session_variables` trong payload va bo sung secret header.
+   - Golang dung `session_variables` de biet user/role/campus/org.
+
+3. `Direct REST -> Golang`
+   - Cac route REST test/backward compatibility van dung `AuthMiddleware()` hoac `OptionalAuthMiddleware()`.
+   - Neu goi REST truc tiep, token JWT se duoc parse boi middleware cua Go.
+
+Tinh trang cac nhom route:
+
+- `GET /health`, `/swagger`, `/explorer/*`, `/hasura/*`, `/api/hasura/*` la public hoac secret-based.
+- `POST /api/auth/*` la public.
 - `AuthMiddleware()` bat buoc JWT cho:
   - `/api/organizations/*`
   - `/api/student/*`
 - `OptionalAuthMiddleware()` cho:
   - `/api/admin/*`
-  - Neu co token thi context se co `user_id`, `student_id`, `public_key`, `role`
-  - Neu khong co token, request van di tiep
-- `RoleGuard()` co ton tai nhung chua duoc gan vao route nao trong code hien tai
-- Hasura callback khong dung JWT, ma dung secret header
+  - Neu co token thi context se co `user_id`, `student_id`, `public_key`, `role`.
+  - Neu khong co token, request van di tiep.
+- `RoleGuard()` co ton tai nhung chua duoc gan vao route nao trong code hien tai.
 
 ## 2. Route map tong quat
 
